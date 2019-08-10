@@ -1,0 +1,8 @@
+name: InvisibleSpectators
+main: com.bodnerfamily.invisible_spectators.InvisibleSpectators
+version: 1.0
+api-version: 1.14
+commands:
+   spectatorsvisible:
+         description: alows the visibility of spectators to be set
+         usage: /spectatorsvisible
