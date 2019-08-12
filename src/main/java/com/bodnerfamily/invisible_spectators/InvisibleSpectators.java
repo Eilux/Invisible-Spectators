@@ -10,11 +10,13 @@ import com.bodnerfamily.invisible_spectators.commands.SpectatorsVisible;
 
 public final class InvisibleSpectators extends JavaPlugin implements StateToggle {
 
+
+    private static final String SPECTATORS_INVISIBLE = "spectators_invisible";
+
     public InvisibleSpectators() {
     }
 
-    private volatile boolean stateDidChange = false;
-    private volatile boolean state = false;
+    private volatile boolean state = this.getConfig().getBoolean(SPECTATORS_INVISIBLE);
 
     private void tellConsole(String message) {
         Bukkit.getConsoleSender().sendMessage(message);
@@ -24,30 +26,50 @@ public final class InvisibleSpectators extends JavaPlugin implements StateToggle
         getServer().broadcastMessage(chatMessage);
     }
 
+
+    @Override
+    public void setState(boolean state) {
+        this.state = state;
+        this.getConfig().set(SPECTATORS_INVISIBLE, this.state);
+        this.saveConfig();
+    }
+
+
+
+
     @Override
     public void onEnable() {
+        this.saveDefaultConfig();
+
         //tells the console the plugin is working
         tellConsole("Invisible spectators is now running.");
-
         //event scheduler
         BukkitScheduler scheduler = getServer().getScheduler();
         scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
             public void run() {
-            	if (stateDidChange) {
-					for (Player p : Bukkit.getOnlinePlayers()) {
-						if (p.getGameMode() == GameMode.SPECTATOR) {
-							for (Player pl : Bukkit.getOnlinePlayers()) {
-								if (state) {
-									pl.showPlayer(InvisibleSpectators.this, p);
-								} else {
-									pl.hidePlayer(InvisibleSpectators.this, p);
-								}
-							}
-						}
-					}
-					stateDidChange = false;
-				}
+                if (state) {
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (p.getGameMode() != GameMode.SPECTATOR) {
+                            for (Player pk : Bukkit.getOnlinePlayers()) {
+                                pk.showPlayer(InvisibleSpectators.this, p);
+                            }
+                        }
+                        if (p.getGameMode() == GameMode.SPECTATOR) {
+                            for (Player pl : Bukkit.getOnlinePlayers()) {
+                                pl.hidePlayer(InvisibleSpectators.this, p);
+                            }
+                        }
+                    }
+                } else {
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        for (Player pk : Bukkit.getOnlinePlayers()) {
+                            pk.showPlayer(InvisibleSpectators.this, p);
+                        }
+
+                    }
+
+                }
             }
         }, 0L, 1L);
         //registers command
@@ -59,10 +81,4 @@ public final class InvisibleSpectators extends JavaPlugin implements StateToggle
     public void onDisable() {
         tellConsole("Invisible spectators disabled.");
     }
-
-	@Override
-	public void setState(boolean state) {
-		this.state = state;
-		this.stateDidChange = true;
-	}
 }
